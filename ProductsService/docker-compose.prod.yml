@@ -1,0 +1,31 @@
+version: '3'
+services:
+
+  #PHP Service
+  app:
+    image: products-service:1.0
+    container_name: Products-Service
+    restart: unless-stopped
+    tty: true
+    environment:
+      SERVICE_NAME: Products-Service
+      SERVICE_TAGS: dev
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./php/pool.d/www2.conf:/usr/local/etc/php-fpm.d/www.conf
+      - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - app-network
+    ports:
+      - "8001:8001"
+
+ 
+#Docker Networks
+networks:
+  app-network:
+    driver: bridge
+#Volumes
+volumes:
+  dbdata:
+    driver: local

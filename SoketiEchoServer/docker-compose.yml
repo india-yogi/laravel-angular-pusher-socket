@@ -1,0 +1,18 @@
+version: '3'
+services:
+    # ...
+
+    soketi:
+        container_name: 'soketi-service'
+        image: 'quay.io/soketi/soketi:latest-16-alpine' # working
+        environment:
+          SOKETI_DEBUG: '1'
+          SOKETI_APP_MANAGER_DRIVER: 'array'
+        ports:
+            - '${SOKETI_PORT:-6001}:6001'
+            - '${SOKETI_METRICS_SERVER_PORT:-9601}:9601'
+        networks:
+            - soketi-network
+networks:
+    soketi-network:
+        driver: bridge

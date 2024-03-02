@@ -1,0 +1,538 @@
+<!-- Orders Listings -->
+<div class="content">
+	<div class="row">
+		<div class="col-md-12">
+			<h1 class="float-left">
+				<span translate>navMenu.configureOrders</span>
+			</h1>
+			<button type="button" class="btn btn-info add-btn float-right" (click)="createOrder()" [disabled]="!writePermission">
+				<span translate>labels.orders.add</span>
+			</button>
+		</div>
+	</div>
+    <div class="white-box float-left">
+	  <div class="row title-section">
+		<div class="col-md-6 text-left">
+			<h2 class="sub-title float-left"><span translate>labels.orders.assets_in_basket</span>
+			</h2>
+			<span class="counter float-left"><span>{{totalItems}}</span></span>
+			<p class="w-100 float-left"><small class="mt-10" translate>labels.orders.msg</small></p>
+		</div>
+	    <div class="col-md-6 float-right" *ngIf="selectedOrders.length > 0 && writePermission">
+		     <button type="button"  class="btn btn-success" (click)="sendOrder()" class="btn btn-info float-right">
+		        <i class="icon icon-send" aria-hidden="true"></i>
+		        &nbsp;<span translate>labels.orders.send_to_supplier</span>
+		    </button>
+		</div>
+	  </div>
+
+		<div class="">
+			<!-- Default panel contents -->
+
+			<form [formGroup]="searchForm" (ngSubmit)="searchOrders(searchForm)">
+					<div class="row">
+						<div class="col-md-6">
+							<div class="form-group">
+								<label for="type_id"><span translate>columns.orders.supplier</span></label>
+								<div class="select-dropdown top-arrow">
+									<select
+										class="form-control"
+										formControlName="supplier_id" >
+											<option *ngFor="let supplier of suppliers" [ngValue]="supplier.id">
+												{{supplier.name}}
+											</option>
+									</select>
+								</div>
+							</div>
+						</div>
+
+						<div class="col-md-6">
+							<div class="form-group">
+								<label for="type_id"><span translate>columns.orders.status</span></label>
+								<div class="select-dropdown top-arrow">
+									<select
+										class="form-control"
+										formControlName="status"
+										>
+											<option *ngFor="let sts of status" [ngValue]="sts.id">
+												<span translate>columns.orders.{{sts.name}}</span>
+											</option>
+									</select>
+								</div>
+							</div>
+						</div>
+
+					</div>
+
+					<div class="row">
+						<div class="col-md-12 col-sm-12">
+							<div style="width: calc(100% - 112px);" class="form-group has-search search-section f-none d-inline-block search-reset">
+								<span class="form-control-feedback"  id="basic-addon1">
+									<i aria-hidden="true"
+									 class="icon icon-search"></i>
+									</span>
+									<input class="form-control" type="text" name="search" [(ngModel)]="searchText"
+									autocomplete="off"
+									formControlName="keyword"
+									(keydown.enter)="searchOrders($event.target.value)">
+									<i (click)="resetOrders()" class="search-close fa fa-times"></i>
+							</div>
+							<button type="button" class="btn btn-default f-none d-inline-block reset-btn ml-10" (click)="searchOrders(searchForm)">
+								<span translate>labels.loging.search</span>
+							</button>
+						</div>
+					</div>
+			</form>
+
+
+				<!-- Table -->
+				<div class="table-responsive mt-30">
+					<table class="table table-hover table-bordered">
+						<thead>
+							<tr>
+								<th class="col-sm-1 custom-checkbox-section">
+									<div class="custom-checkbox">
+										<input type='checkbox' id="all_checkboxes" [value]="" (change)="selectAllOrders($event)" class="styled-checkbox"/>
+										<label for="all_checkboxes"></label>
+									</div>
+								</th>
+
+								<th class="col-sm-1 cursor serial-number" (click)="onSort('id')">
+									<span>Sr.</span>
+									&nbsp;
+									<span *ngIf="sortKey !== 'id'"><i class="fa fa-sort"></i></span>
+									<span *ngIf="sortKey === 'id'">
+										<i class="fa fa-sort-up" *ngIf="sortDirection === 'asc'"></i>
+										<i class="fa fa-sort-down" *ngIf="sortDirection === 'desc'"></i>
+									</span>
+								</th>
+
+								<th class="col-sm-1 cursor" (click)="onSort('supplier_id')">
+									<span translate>columns.orders.supplier</span>
+									&nbsp;
+									<span *ngIf="sortKey !== 'supplier_id'"><i class="fa fa-sort"></i></span>
+									<span *ngIf="sortKey === 'supplier_id'">
+										<i class="fa fa-sort-up" *ngIf="sortDirection === 'asc'"></i>
+										<i class="fa fa-sort-down" *ngIf="sortDirection === 'desc'"></i>
+									</span>
+								</th>
+
+								<th class="col-sm-1 cursor" (click)="onSort('model_id')">
+									<span translate>columns.orders.model</span>
+									&nbsp;
+									<span *ngIf="sortKey !== 'model_id'"><i class="fa fa-sort"></i></span>
+									<span *ngIf="sortKey === 'model_id'">
+										<i class="fa fa-sort-up" *ngIf="sortDirection === 'asc'"></i>
+										<i class="fa fa-sort-down" *ngIf="sortDirection === 'desc'"></i>
+									</span>
+								</th>
+
+								<th class="col-sm-1 cursor" (click)="onSort('status')">
+									<span translate>columns.orders.status</span>
+									&nbsp;
+									<span *ngIf="sortKey !== 'status'"><i class="fa fa-sort"></i></span>
+									<span *ngIf="sortKey === 'status'">
+										<i class="fa fa-sort-up" *ngIf="sortDirection === 'asc'"></i>
+										<i class="fa fa-sort-down" *ngIf="sortDirection === 'desc'"></i>
+									</span>
+								</th>
+
+								<th class="col-sm-1"><span translate>columns.orders.stock</span></th>
+
+								<th class="col-sm-1 cursor" (click)="onSort('requested_quantity')">
+									<span translate>columns.orders.requested_quantity</span>
+									&nbsp;
+									<span *ngIf="sortKey !== 'requested_quantity'"><i class="fa fa-sort"></i></span>
+									<span *ngIf="sortKey === 'requested_quantity'">
+										<i class="fa fa-sort-up" *ngIf="sortDirection === 'asc'"></i>
+										<i class="fa fa-sort-down" *ngIf="sortDirection === 'desc'"></i>
+									</span>
+								</th>
+
+								<th class="col-sm-1"><span translate>columns.orders.required_quantity</span></th>
+								<th class="col-sm-1 cursor" (click)="onSort('quantity')">
+									<span translate>columns.orders.ordered_quantity</span>
+									&nbsp;
+									<span *ngIf="sortKey !== 'quantity'"><i class="fa fa-sort"></i></span>
+									<span *ngIf="sortKey === 'quantity'">
+										<i class="fa fa-sort-up" *ngIf="sortDirection === 'asc'"></i>
+										<i class="fa fa-sort-down" *ngIf="sortDirection === 'desc'"></i>
+									</span>
+								</th>
+
+								<th class="col-sm-1" *ngIf="writePermission"><span translate>columns.orders.actions</span></th>
+							</tr>
+						</thead>
+						<tbody *ngIf="orders">
+							<tr *ngFor="let order of orders; let i=index;">
+								<td class="col-sm-1 custom-checkbox-section" >
+
+
+										<div class="custom-checkbox">
+											<input class="styled-checkbox" type='checkbox' [value]="order.id" (change)="selectOrder($event)" [checked]="(selectedOrders.indexOf(order.id) > -1)  ? true : false" title="{{selectedOrders[i]}}-{{order.id}}"
+											id="{{selectedOrders[i]}}-{{order.id}}" *ngIf="(order?.status == 'NEW' || order?.status == 1) && (order.supplier?.length > 0) " />
+											<label for="{{selectedOrders[i]}}-{{order.id}}"></label>
+										</div>
+
+								</td>
+
+								<td>{{itemsPerPage*(currentPage-1)+i+1}}</td>
+								<td>{{ order.supplier }}</td>
+								<td>{{ order.model_name}}</td>
+								<td><span translate>columns.orders.{{ order.status }}</span></td>
+								<td>{{ order.stock }}</td>
+								<td>{{ order.requested_quantity }}</td>
+
+								<td>
+									{{ order.requested_quantity > 0 ? (order.requested_quantity - order.stock) : order.requested_quantity}}
+								</td>
+
+								<td>{{ order.quantity }}</td>
+								<td>
+
+									&nbsp;
+									<button [disabled]="!writePermission"
+									(click)="showOrder(order.id)"
+									class="btn btn-danger btn-xs mt1-15" *ngIf="order?.status == 'NEW' || order?.status == 1">
+										<i class="icon icon-edit-2"></i>
+									</button>
+									<button [disabled]="!writePermission"
+									(click)="deleteOrder(order.id,'This')"
+									class="btn btn-danger btn-xs ml-10">
+										<i class="glyphicon glyphicon-trash"></i>
+									</button>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+
+				<div class="pagination-all">
+					<div class="d-inline-block result-per-page">
+						<form class="form-inline">
+							<div class="form-group">
+									<label for="limit" class="control-label">
+										<span translate>labels.results_per_page</span>
+									</label>
+									<div class="select-dropdown">
+										<select name="limit" id="limit" class="form-control inline" (change)="setPageLimit($event)">
+											<option *ngFor="let limit of limits" value="{{limit}}">{{limit}}</option>
+										</select>
+									</div>
+							</div>
+						</form>
+					</div>
+					<div class="d-inline-block main-pagination">
+						<div class="text-center">
+							<pagination
+								[totalItems]="totalItems"
+								[(ngModel)]="currentPage"
+								(pageChanged)="pageChanged($event)"
+								[itemsPerPage] = "itemsPerPage"
+								[boundaryLinks]="true"
+								[maxSize]="maxSize"
+								previousText="&lsaquo;"
+								nextText="&rsaquo;"
+								firstText="&laquo;"
+								lastText="&raquo;">
+							</pagination>
+						</div>
+					</div>
+				</div>
+
+
+		</div>
+	</div>
+</div>
+
+<!-- Add Order Modal -->
+<div class="modal fade" id="orderModal" tabindex="-1" role="dialog" aria-labelledby="orderModalLabel" aria-hidden="true" *ngIf="writePermission" data-backdrop="static">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+
+        <h5 class="modal-title" id="orderModalLabel">
+        	<h3 *ngIf="order == null" class="modal-title"><span translate>labels.orders.add</span></h3>
+        	<h3 *ngIf="order != null" class="modal-title"><span translate>labels.orders.update</span></h3>
+        </h5>
+      </div>
+    <form [formGroup]="orderForm" (ngSubmit)="addOrder(orderForm)">
+      <div class="modal-body">
+	        <div class="row">
+
+	            <div class="col-md-4">
+	                <div class="form-group">
+	                    <label for="type_id"><span translate>columns.orders.type</span>
+	                    <span class="esp-star">*</span>
+	                        <span *ngIf="!typePermission" class="invalid-feedback">
+	                            &nbsp;(<span translate>permissionDeny</span>)
+	                        </span>
+						</label>
+						<div class="select-dropdown">
+							<select
+								class="form-control"
+								id="type_id"
+								placeholder="Model Type"
+								name="type_id"
+								formControlName="type_id"
+								required
+								(change)="getModelsByType()" >
+									<option *ngFor="let type of types" [ngValue]="type.id">{{type.name}}</option>
+							</select>
+						</div>
+
+						<div *ngIf="submitted && f.type_id.errors" class="invalid-feedback">
+                            <div *ngIf="f.type_id.errors.required">
+                                <span translate>validations.orders.type_required</span>
+                            </div>
+                            <div *ngIf="f.type_id.errors.pattern">
+                                 <span translate>validations.orders.type_pattern</span>
+                            </div>
+                        </div>
+	                </div>
+	            </div>
+
+	            <div class="col-md-4" >
+	                <div class="form-group">
+	                    <label for="model_id">
+	                    	<span translate>columns.orders.model</span> <span class="esp-star">*</span>
+							<label for="model" *ngIf="order == null">
+		                        <span *ngIf="!modelPermission" class="invalid-feedback">
+		                            &nbsp;(<span translate>permissionDeny</span>)
+		                        </span>
+							</label>
+	                    </label>
+						<div class="select-dropdown">
+							<select
+								class="form-control"
+								id="model_id"
+								placeholder="Model"
+								name="model_id"
+								formControlName="model_id"
+								(change)="setModelName($event)"
+								>
+								<ng-container *ngFor="let model of models">
+									<option *ngIf="model.active == 1" value={{model.id}}
+										[selected]="order !=null && order.model_id && order.model_id == model.id">{{model.alias}}</option>
+								</ng-container>
+								<option [hidden]="(models?.length != 0)">Type has no models.</option>
+
+							</select>
+						</div>
+						<input type="hidden" formControlName="model_name" class="form-control" />
+
+						<div *ngIf="submitted && f.model_id.errors" class="invalid-feedback">
+                            <div *ngIf="f.model_id.errors.required">
+                                <span translate>validations.orders.model_required</span>
+                            </div>
+                            <div *ngIf="f.model_id.errors.pattern">
+                                 <span translate>validations.orders.model_pattern</span>
+                            </div>
+                        </div>
+	                </div>
+	            </div>
+
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="supplier_id">
+                            <span translate>columns.orders.supplier</span> <span class="esp-star">*</span>
+
+                            <span *ngIf="!supplierPermission" class="invalid-feedback">
+                                &nbsp;(<span translate>permissionDeny</span>)
+                            </span>
+                        </label>
+						<div class="select-dropdown">
+							<select
+								class="form-control"
+								id="supplier_id"
+								placeholder="Model Type"
+								name="supplier_id"
+								formControlName="supplier_id"
+								required>
+									<option *ngFor="let supplier of suppliers" [ngValue]="supplier.id">{{supplier.name}}</option>
+									<option [hidden]="(suppliers?.length != 0)">No suppliers available</option>
+
+							</select>
+						</div>
+
+                        <div *ngIf="submitted && f.supplier_id.errors" class="invalid-feedback">
+                            <div *ngIf="f.supplier_id.errors.required">
+                                <span translate>validations.orders.supplier_required</span>
+                            </div>
+                            <div *ngIf="f.supplier_id.errors.pattern">
+                                 <span translate>validations.orders.supplier_pattern</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+	            <div class="col-md-4">
+			        <div class="form-group">
+			            <label for="model">
+			            	<span translate>columns.orders.stock</span> : <span>{{order?.stock}}</span>
+			           	</label>
+			        </div>
+			    </div>
+
+	            <div class="col-md-4">
+			        <div class="form-group">
+			            <label for="model">
+			            	<span translate>columns.orders.requested_quantity</span> :
+			            		<span>{{order?.requested_quantity}}</span>
+			           	</label>
+			        </div>
+			    </div>
+
+	            <div class="col-md-4">
+			        <div class="form-group">
+			            <label for="model">
+			            	<span translate>columns.orders.required_quantity</span> :
+			            		<span>
+									{{ order?.requested_quantity > 0 ? (order?.requested_quantity - order?.stock) : order?.requested_quantity}}
+			            		</span>
+			           	</label>
+			        </div>
+			    </div>
+
+	            <div class="col-md-12">
+			        <div class="form-group">
+			            <label for="model">
+			            	<span translate>columns.orders.ordered_quantity</span>
+ 							<span class="esp-star">*</span>
+			            </label>
+			            <input type="text" class="form-control" placeholder="Quantity" name="quantity" formControlName="quantity"/>
+						<div *ngIf="submitted && f.quantity.errors" class="invalid-feedback">
+                            <div *ngIf="f.quantity.errors.required">
+                                <span translate>validations.orders.quantity_required</span>
+                            </div>
+                            <div *ngIf="f.quantity.errors.min">
+                                 <span translate>validations.orders.quantity_min</span>
+                            </div>
+                            <div *ngIf="f.quantity.errors.max">
+                                 <span translate>validations.orders.quantity_max</span>
+                            </div>
+                            <div *ngIf="f.quantity.errors.pattern">
+                                 <span translate>validations.orders.quantity_pattern</span>
+                            </div>
+                        </div>
+			        </div>
+			    </div>
+
+	        </div>
+
+	        <div class="alert alert-danger" *ngIf="errors" style="text-align:left;" role="alert">
+	            <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+	            <span class="sr-only"><span translate>validations.labels.errors</span>:</span>
+	            <span class="help is-danger">
+                    <div *ngIf="errors">
+                        <div *ngFor="let error of errors">
+                            {{error}}
+                        </div>
+                    </div>
+                </span>
+	        </div>
+      </div>
+      <div class="modal-footer">
+			<input type="hidden" id="id" name="id" formControlName="id" />
+	        <button type="button" class="btn btn-danger" data-dismiss="modal">
+	            <span translate>labels.orders.cancle</span>
+			</button>
+			<button type="submit" class="btn btn-success">
+	            <span translate>labels.orders.save</span>
+	        </button>
+      </div>
+    </form>
+
+    </div>
+  </div>
+</div>
+
+<!-- Send Order Modal -->
+<div class="modal fade" id="sendOrderModal" tabindex="-1" role="dialog" aria-labelledby="sendOrderModalLabel" aria-hidden="true" *ngIf="writePermission" data-backdrop="static">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+
+        <h5 class="modal-title" id="sendOrderModalLabel">
+        	<h3 class="modal-title"><span translate>labels.orders.send_to_supplier</span></h3>
+        </h5>
+      </div>
+
+    <form (ngSubmit)="sendOrderSubmit(sf)" #sf="ngForm">
+      <div class="modal-body" *ngIf="ordersToSent.length > 0">
+
+
+	        	<ng-container *ngFor="let items of ordersToSent; let i=index; let j = '0'">
+	        		<div *ngIf="items?.length > 0;">
+
+						<div class="">
+							<div class="send-supplier-order float-left">
+								<div class="half">
+									<div class="">
+										<label for="supplier"><span translate>columns.orders.supplier</span>:</label>
+										<strong class="primary-txt"> {{items[0]?.supplier}}</strong>
+									</div>
+									<div class="table-section">
+										<!-- <label for="summary"><span translate>columns.orders.summary</span> : </label> -->
+										<table class="table table-hover table-bordered mb-0">
+											<thead>
+												<tr>
+													<th class="col-sm-1">
+														<span translate>columns.orders.model</span>
+													</th>
+													<th class="col-sm-1 text-center">
+														<span translate>columns.orders.ordered_quantity</span>
+													</th>
+												</tr>
+											</thead>
+											<tbody>
+													<tr *ngFor="let order of items">
+														<td>{{order?.model_name}}</td>
+														<td class="text-center">{{order?.quantity}}</td>
+													</tr>
+											</tbody>
+										</table>
+									</div>
+								</div>
+								<div class="half">
+									<div class="form-group">
+										<label for="model">
+											<span translate>columns.orders.comment</span> :
+										</label>
+										<input ngModel type="text" name="comments[{{items[0]?.supplier_id}}]" class="form-control" />
+									</div>
+									<div class="form-group">
+										<label for="model">
+											<span translate>columns.orders.po_number</span> :
+										</label>
+										<input type="text" name="po_number[]" class="form-control" value="{{items[0]?.supplier_po_number}}"/>
+									</div>
+								</div>
+							</div>
+						</div>
+
+					</div>
+				</ng-container> <!-- Outer Loop end -->
+
+
+      </div>
+
+      <div class="modal-footer">
+	        <button type="button" class="btn btn-danger" data-dismiss="modal">
+	            <span translate>labels.orders.cancle</span>
+			</button>
+			<button type="submit" class="btn btn-success">
+	            <span translate>labels.orders.save</span>
+	        </button>
+      </div>
+    </form>
+
+    </div>
+  </div>
+</div>
